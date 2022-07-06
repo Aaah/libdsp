@@ -1,6 +1,6 @@
 import pytest
 
-from processing_nodes.skeleton import fib, main
+from libdsp.skeleton import fib, main
 
 __author__ = "Rémy VINCENT"
 __copyright__ = "Rémy VINCENT"
