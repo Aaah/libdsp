@@ -72,6 +72,14 @@ class DSPModuleParameter:
 
         return
 
+    def __repr__(self) -> str:
+        """Detailed information about the DSPModuleParameter.
+
+        Returns:
+            str: formatted information
+        """
+        return "%s : %s" % (self._name, self._description)
+
     @property
     def val(self):
         return self._val
@@ -131,6 +139,21 @@ class DSPModuleParameterFloat(DSPModuleParameter):
         self.val = initv
 
         return
+
+    def __repr__(self) -> str:
+        """Detailed information about the DSPModuleParameter.
+
+        Returns:
+            str: formatted information
+        """
+        return "%s (float, [%.4f : %.4f : %.4f] %s) : %s" % (
+            self._name,
+            self._minv,
+            self._stepv,
+            self._maxv,
+            self._units,
+            self._description,
+        )
 
     @property
     def val(self) -> float:
