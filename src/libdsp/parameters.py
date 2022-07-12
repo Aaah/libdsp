@@ -146,7 +146,7 @@ class DSPModuleParameterFloat(DSPModuleParameter):
         Returns:
             str: formatted information
         """
-        return "%s (float, [%.4f : %.4f : %.4f] %s) : %s" % (
+        return "%s (float, [%.4f : %.4f : %.4f] in %s) : %s" % (
             self._name,
             self._minv,
             self._stepv,
