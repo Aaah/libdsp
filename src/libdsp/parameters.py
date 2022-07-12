@@ -4,8 +4,6 @@ __author__ = "Rémy VINCENT"
 __copyright__ = "Aaah"
 __license__ = "Copyright 2022"
 
-# todo : setter for the "set of accepted values"
-
 # --- data frames transported from plugins to plugins (inputs, outputs)
 # ? can it be achieved with only outputs to avoid memory doubles?
 
@@ -188,23 +186,39 @@ class DSPModuleParameterFloat(DSPModuleParameter):
         """Setter for the parameter value :
         - check the validity of the candidate value
         - apply callbacks attached to the parameter (typicially the configure() method of the DSPModule)
+        - forks behavior depending on set or range
 
         Args:
             v (float): candidate value
         """
 
-        # apply boundaries to the candidate value
-        old_val = self.val
-        self._val = np.clip(v, self._minv, self._maxv)
+        if not isinstance(v, float):
+            raise ValueError(
+                "DSPModuleParameter <%s> SETTER : the candidate value has improper type, expected <float>."
+                % (self._name)
+            )
 
-        print(
-            "DSPModuleParameter : %s value changed from %f to %f"
-            % (self._name, old_val, self.val)
-        )
+        reference = self.val
+
+        if len(self._set) != 0:
+            # check inclusion of the candidate value
+            if v in self._set:
+                self._val = v
+        else:
+            # apply boundaries to the candidate value
+            self._val = np.clip(v, self._minv, self._maxv)
+
+            # round with given accuracy
+            self._val = np.round(self._val / self._stepv) * self._stepv
 
         # call configure() function of plugins
-        for cb in self._callbacks:
-            cb()
+        if reference != self.val:
+            print(
+                "DSPModuleParameter <%s> : value changed from %f to %f"
+                % (self._name, reference, self.val)
+            )
+            for cb in self._callbacks:
+                cb()
         pass
 
 
