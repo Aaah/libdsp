@@ -58,17 +58,19 @@ class DSPModuleParameter:
     - their attributes are exhaustive enough for automated GUI generation.
     """
 
-    def __init__(self, name: str = "", descp: str = ""):
+    def __init__(self, name: str = "", descp: str = "", set: list = []):
         """Initialisation of a DSPModuleParameter.
 
         Args:
             name (str, optional): name of the parameter. Defaults to "".
             descp (str, optional): quick description of the parameter for hints. Defaults to "".
+            set (list, optional): list of restricted valid values. Defaults to [] (no constrain).
         """
-        self._val = 0.0
-        self._name = name
-        self._description = descp
-        self._callbacks = []
+        self._val = 0.0  # current value
+        self._name = name  # name of the paramter
+        self._description = descp  # short description
+        self._set = set  # set of valid values
+        self._callbacks = []  # callbacks run when parameter is updated
 
         return
 
@@ -112,6 +114,7 @@ class DSPModuleParameterFloat(DSPModuleParameter):
         self,
         name: str = "",
         descp: str = "",
+        set: list = [],
         units: str = "N/A",
         minv: float = 0.0,
         maxv: float = 1.0,
@@ -120,9 +123,12 @@ class DSPModuleParameterFloat(DSPModuleParameter):
     ):
         """Initialisation of a float parameter for DSPModules.
 
+        If the "set" list is not empty, other parameters are dismissed (minv, maxv, stepv) so that the parameter only tolerates the values included in the set.
+
         Args:
             name (str, optional): Name of the parameter. Defaults to "".
             descp (str, optional): Quick description for hints. Defaults to "".
+            set (list, optional): List of tolerated values. If empty, no restriction.
             units (str, optional): Units (dB, Hz...). Defaults to "N/A".
             minv (float, optional): Minimum value tolerated. Defaults to 0.0.
             maxv (float, optional): Maximum value tolerated. Defaults to 1.0.
@@ -130,7 +136,13 @@ class DSPModuleParameterFloat(DSPModuleParameter):
             stepv (float, optional): Resolution on the parameter value. Defaults to 0.001.
         """
 
-        super().__init__(name, descp)
+        if len(set) and not all(isinstance(i, float) for i in set):
+            raise ValueError(
+                "ERROR : DSPModuleParameter %s : the set contains values that are not of the type <float>."
+                % (name)
+            )
+
+        super().__init__(name, descp, set)
         self._minv = minv
         self._maxv = maxv
         self._initv = initv
@@ -146,14 +158,24 @@ class DSPModuleParameterFloat(DSPModuleParameter):
         Returns:
             str: formatted information
         """
-        return "%s (float, [%.4f : %.4f : %.4f] in %s) : %s" % (
-            self._name,
-            self._minv,
-            self._stepv,
-            self._maxv,
-            self._units,
-            self._description,
-        )
+
+        if len(self._set) == 0:
+            return "%s (float, [%.4f : %.4f : %.4f] in %s) : %s" % (
+                self._name,
+                self._minv,
+                self._stepv,
+                self._maxv,
+                self._units,
+                self._description,
+            )
+        else:
+            str_set_values = " ".join(str(x) for x in self._set)
+            return "%s (float, values in the set [%s] in %s) : %s" % (
+                self._name,
+                str_set_values,
+                self._units,
+                self._description,
+            )
 
     @property
     def val(self) -> float:

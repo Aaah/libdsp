@@ -1,3 +1,5 @@
+import pytest as pytest
+
 from libdsp.parameters import *
 
 __author__ = "Rémy VINCENT"
@@ -41,3 +43,26 @@ def test_parameters_float_2():
     info = repr(param)
     assert len(info)
     return
+
+
+def test_parameters_float_2():
+    """Check the validity of the type in the valid set of values"""
+    p1 = DSPModuleParameterFloat(name="parameter name", set=[1.0, 2.0, 3.0])
+    assert isinstance(p1, DSPModuleParameterFloat)
+
+    return
+
+
+def test_parameters_float_3():
+    """Check the validity of the type in the valid set of values"""
+    with pytest.raises(Exception):
+        p1 = DSPModuleParameterFloat(
+            name="parameter name", set=["not a float", 2.0, 3.0]
+        )
+
+    return
+
+
+p1 = DSPModuleParameterFloat(name="parameter name", set=[1.0, 2.0, 3.0])
+
+print(repr(p1))
