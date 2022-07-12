@@ -4,6 +4,8 @@ __author__ = "Rémy VINCENT"
 __copyright__ = "Aaah"
 __license__ = "Copyright 2022"
 
+# todo : setter for the "set of accepted values"
+
 # --- data frames transported from plugins to plugins (inputs, outputs)
 # ? can it be achieved with only outputs to avoid memory doubles?
 
@@ -138,7 +140,7 @@ class DSPModuleParameterFloat(DSPModuleParameter):
 
         if len(set) and not all(isinstance(i, float) for i in set):
             raise ValueError(
-                "ERROR : DSPModuleParameter %s : the set contains values that are not of the type <float>."
+                "DSPModuleParameter %s : the set has values that are of improper type, expected <float>."
                 % (name)
             )
 
@@ -195,7 +197,10 @@ class DSPModuleParameterFloat(DSPModuleParameter):
         old_val = self.val
         self._val = np.clip(v, self._minv, self._maxv)
 
-        print("value changed from %f to %f" % (old_val, self.val))
+        print(
+            "DSPModuleParameter : %s value changed from %f to %f"
+            % (self._name, old_val, self.val)
+        )
 
         # call configure() function of plugins
         for cb in self._callbacks:
