@@ -7,16 +7,16 @@ __copyright__ = "Aaah"
 __license__ = "Copyright 2022"
 
 """
-- [x] number: check datatype for floats/int/booleans/string
+- [x] any: check datatype for floats/int/booleans/string
+- [ ] any/negotiation: try change a fixed value
+- [ ] any/negotiation: change status to constrained/negotiable
+- [ ] any: repr
 
 - [ ] number/range: bounds
 - [ ] number/set: in/out of set
 
 - [ ] string/format: in/out format
 - [ ] string/set: in/out set
-
-- [ ] any/negotiation: try change a fixed value
-- [ ] any/negotiation: change status to constrained/negotiable
 """
 
 
@@ -91,5 +91,24 @@ def test_variable_4():
     rdm_int = np.random.randint(0, 3458, 1, dtype=np.int32)
     with pytest.raises(Exception):
         var.val = rdm_int
+
+    pass
+
+
+def test_variable_5():
+    """status"""
+
+    # default status
+    var = DSPVariable(dtype=float, status=DSPVariableStatus.DSP_VAR_DYNAMIC)
+    assert var.status == DSPVariableStatus.DSP_VAR_DYNAMIC
+
+    # change status
+    var.status = DSPVariableStatus.DSP_VAR_CONSTANT
+    assert var.status == DSPVariableStatus.DSP_VAR_CONSTANT
+
+    # try and change value when constant
+    ref_value = var.val
+    var.val = 1.0
+    assert var.val is ref_value
 
     pass

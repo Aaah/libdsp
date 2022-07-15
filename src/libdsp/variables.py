@@ -1,3 +1,5 @@
+from enum import Enum
+
 import numpy as np
 
 __author__ = "Rémy VINCENT"
@@ -25,14 +27,24 @@ String :
 """
 
 
+class DSPVariableStatus(Enum):
+    DSP_VAR_CONSTANT = 0  # the value cannot be changed
+    DSP_VAR_DYNAMIC = 1  # the value can be changed using the setter
+
+
 class DSPVariable:
-    def __init__(self, dtype: np.dtype) -> None:
+    def __init__(
+        self,
+        dtype: np.dtype,
+        status: DSPVariableStatus = DSPVariableStatus.DSP_VAR_DYNAMIC,
+    ) -> None:
         self._dtype = dtype  # data type allowed, unique for each variable
         self._val = None  # the value of the variable
+        self._status = status  # can the value be edited
         pass
 
     def __repr__(self) -> str:
-        return "(%s, %s)" % (self._val, self._dtype)
+        return "(%s, %s, %s)" % (str(self._val), str(self._dtype), str(self._status))
 
     @property
     def val(self):
@@ -45,5 +57,20 @@ class DSPVariable:
                 "DSPVariable SETTER : the candidate variable has improper type, expected %s but got %s."
                 % (self._dtype, type(v))
             )
-        self._val = v
+
+        if self._status == DSPVariableStatus.DSP_VAR_DYNAMIC:
+            self._val = v
+
+        return
+
+    @property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, s: DSPVariableStatus):
+        self._status = s
         pass
+
+
+# class DSPNumber(DSPVariable):
