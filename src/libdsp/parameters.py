@@ -160,7 +160,7 @@ class DSPModuleParameterFloat(DSPModuleParameter):
         """
 
         if len(self._set) == 0:
-            return "%s (float, [%.4f : %.4f : %.4f] in %s) : %s" % (
+            return "%s (float, in range [%.4f : %.4f : %.4f] in %s) : %s" % (
                 self._name,
                 self._minv,
                 self._stepv,

@@ -4,6 +4,10 @@ __author__ = "Rémy VINCENT"
 __copyright__ = "Aaah"
 __license__ = "Copyright 2022"
 
+# todo : list of callbacks (process, display1, display2, ...) to be computed on process()
+# todo : repr
+# todo : signals (new file.py)
+
 
 class DSPModule:
     """Template class for DSP algorithms.
