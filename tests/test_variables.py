@@ -8,11 +8,15 @@ __license__ = "Copyright 2022"
 
 """
 - [x] any: check datatype for floats/int/booleans/string
-- [ ] any/negotiation: try change a fixed value
-- [ ] any/negotiation: change status to constrained/negotiable
+- [x] any/negotiation: try change a fixed value
+- [x] any/negotiation: change status to constrained/negotiable
 - [ ] any: repr
 
-- [ ] number/range: bounds
+- [+] number/range: mistake on range (dtype)
+- [+] number/range: special cases on bounds (min > max, step > max-min)
+- [+] number/range: bounds (float/int)
+- [+] number/range: roundings based on step value (float)
+
 - [ ] number/set: in/out of set
 
 - [ ] string/format: in/out format
@@ -110,5 +114,110 @@ def test_variable_5():
     ref_value = var.val
     var.val = 1.0
     assert var.val is ref_value
+
+    pass
+
+
+def test_variable_number_range_1():
+    """roundings"""
+
+    # create a float within a range
+    var = DSPVariable(dtype=float, range=DSPVarRange(0.0, 0.1, 1.0, default=0.0))
+
+    # acceptable set
+    var.val = 0.5
+    assert almost_equal(var.val, 0.5)
+
+    # roundings with given accuracy
+    var.val = 0.54
+    assert almost_equal(var.val, 0.5)
+
+    var.val = 0.55
+    assert almost_equal(var.val, 0.6)
+
+    var.val = 0.56
+    assert almost_equal(var.val, 0.6)
+
+    pass
+
+
+def test_variable_number_range_2():
+    """bounds for floats"""
+
+    minv = 0.0
+    stepv = 0.1
+    maxv = 1.0
+
+    # create a float within a range
+    var = DSPVariable(dtype=float, range=DSPVarRange(minv, stepv, maxv, default=0.0))
+
+    # undershoot
+    var.val = -1.0
+    assert almost_equal(var.val, minv)
+
+    # overshoot
+    var.val = 1.2
+    assert almost_equal(var.val, maxv)
+
+    pass
+
+
+def test_variable_number_range_3():
+    """bounds for int"""
+
+    minv = 0
+    stepv = 1
+    maxv = 100
+
+    # create a float within a range
+    var = DSPVariable(dtype=np.int16, range=DSPVarRange(minv, stepv, maxv, default=0))
+
+    # undershoot
+    var.val = minv - 10
+    assert almost_equal(var.val, minv)
+
+    # overshoot
+    var.val = maxv + 10
+    assert almost_equal(var.val, maxv)
+
+    pass
+
+
+def test_variable_number_range_4():
+    """mistake on range dtype"""
+
+    minv = 0.0  # a float, not int
+    stepv = 1
+    maxv = 100
+
+    # create a variable
+    with pytest.raises(Exception):
+        var = DSPVariable(
+            dtype=np.int16, range=DSPVarRange(minv, stepv, maxv, default=0)
+        )
+
+    pass
+
+
+def test_variable_number_range_5():
+    """special cases on boundaries"""
+
+    # default value is not specified
+    var = DSPVariable(dtype=float, range=DSPVarRange(0.0, 0.1, 1.0))
+    assert almost_equal(var.initv, 0.0)
+
+    # default value is out of bounds
+    var = DSPVariable(dtype=float, range=DSPVarRange(0.0, 0.1, 1.0, default=2.0))
+    assert almost_equal(var.val, 1.0)
+
+    # minv > maxv
+    with pytest.raises(Exception):
+        var = DSPVariable(dtype=float, range=DSPVarRange(1.0, 0.1, 0.0))
+
+    # step > maxv-minv
+    var = DSPVariable(dtype=float, range=DSPVarRange(0.0, 1.1, 1.0))
+    assert almost_equal(var.val, 0.0)
+    var.val = 0.6
+    assert almost_equal(var.val, 1.0)
 
     pass
