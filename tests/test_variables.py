@@ -19,6 +19,10 @@ __license__ = "Copyright 2022"
 
 - [ ] number/set: in/out of set
 
+- [ ] number/set-range: conflict if the 2 are defined
+- [ ] number/string: conflict if string + range
+- [ ] number/range: check preservation of format after roundings (int, floats)
+
 - [ ] string/format: in/out format
 - [ ] string/set: in/out set
 """
@@ -122,7 +126,7 @@ def test_variable_number_range_1():
     """roundings"""
 
     # create a float within a range
-    var = DSPVariable(dtype=float, range=DSPVarRange(0.0, 0.1, 1.0, default=0.0))
+    var = DSPVariable(dtype=float, range=(0.0, 0.1, 1.0, 0.0))
 
     # acceptable set
     var.val = 0.5
@@ -149,7 +153,7 @@ def test_variable_number_range_2():
     maxv = 1.0
 
     # create a float within a range
-    var = DSPVariable(dtype=float, range=DSPVarRange(minv, stepv, maxv, default=0.0))
+    var = DSPVariable(dtype=float, range=(minv, stepv, maxv, 0.0))
 
     # undershoot
     var.val = -1.0
@@ -170,7 +174,7 @@ def test_variable_number_range_3():
     maxv = 100
 
     # create a float within a range
-    var = DSPVariable(dtype=np.int16, range=DSPVarRange(minv, stepv, maxv, default=0))
+    var = DSPVariable(dtype=int, range=(minv, stepv, maxv, 0))
 
     # undershoot
     var.val = minv - 10
@@ -192,9 +196,7 @@ def test_variable_number_range_4():
 
     # create a variable
     with pytest.raises(Exception):
-        var = DSPVariable(
-            dtype=np.int16, range=DSPVarRange(minv, stepv, maxv, default=0)
-        )
+        var = DSPVariable(dtype=np.int16, range=(minv, stepv, maxv, 0))
 
     pass
 
@@ -202,20 +204,16 @@ def test_variable_number_range_4():
 def test_variable_number_range_5():
     """special cases on boundaries"""
 
-    # default value is not specified
-    var = DSPVariable(dtype=float, range=DSPVarRange(0.0, 0.1, 1.0))
-    assert almost_equal(var.initv, 0.0)
-
     # default value is out of bounds
-    var = DSPVariable(dtype=float, range=DSPVarRange(0.0, 0.1, 1.0, default=2.0))
+    var = DSPVariable(dtype=float, range=(0.0, 0.1, 1.0, 2.0))
     assert almost_equal(var.val, 1.0)
 
     # minv > maxv
     with pytest.raises(Exception):
-        var = DSPVariable(dtype=float, range=DSPVarRange(1.0, 0.1, 0.0))
+        var = DSPVariable(dtype=float, range=(1.0, 0.1, 0.0))
 
     # step > maxv-minv
-    var = DSPVariable(dtype=float, range=DSPVarRange(0.0, 1.1, 1.0))
+    var = DSPVariable(dtype=float, range=(0.0, 1.1, 1.0))
     assert almost_equal(var.val, 0.0)
     var.val = 0.6
     assert almost_equal(var.val, 1.0)
