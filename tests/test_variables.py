@@ -12,16 +12,16 @@ __license__ = "Copyright 2022"
 - [x] any/negotiation: change status to constrained/negotiable
 - [ ] any: repr
 
-- [+] number/range: mistake on range (dtype)
-- [+] number/range: special cases on bounds (min > max, step > max-min)
-- [+] number/range: bounds (float/int)
-- [+] number/range: roundings based on step value (float)
+- [x] number/range: mistake on range (dtype)
+- [x] number/range: special cases on bounds (min > max, step > max-min)
+- [x] number/range: bounds (float/int)
+- [x] number/range: roundings based on step value (float)
+- [x] number/set-range: conflict if the 2 are defined
+- [x] number/string: conflict if string + range
+- [x] number/range: check preservation of format after roundings (int, floats)
 
 - [ ] number/set: in/out of set
 
-- [ ] number/set-range: conflict if the 2 are defined
-- [ ] number/string: conflict if string + range
-- [ ] number/range: check preservation of format after roundings (int, floats)
 
 - [ ] string/format: in/out format
 - [ ] string/set: in/out set
@@ -170,7 +170,7 @@ def test_variable_number_range_3():
     """bounds for int"""
 
     minv = 0
-    stepv = 1
+    stepv = 2
     maxv = 100
 
     # create a float within a range
@@ -219,3 +219,38 @@ def test_variable_number_range_5():
     assert almost_equal(var.val, 1.0)
 
     pass
+
+
+def test_variable_number_range_6():
+    """roundings, check preservation of datatype"""
+
+    # check for floats
+    var = DSPVariable(dtype=float, range=(0.0, 0.1, 1.0, 0.0))
+    var.val = 0.53
+    assert almost_equal(var.val, 0.5)
+    assert isinstance(var.val, float)
+
+    # check for ints
+    var = DSPVariable(dtype=int, range=(0, 3, 100, 3))
+    assert var.val == 3
+    assert isinstance(var.val, int)
+
+    var.val = 37
+    assert var.val == 36
+    assert isinstance(var.val, int)
+
+    return
+
+
+def test_variable_number_range_set_conflict():
+    """conflict if both set and range are defined"""
+
+    with pytest.raises(Exception):
+        var = DSPVariable(dtype=float, range=(0.0, 0.1, 1.0, 2.0), set=(0.0, 1.0))
+
+
+def test_variable_number_range_string_conflict():
+    """conflict if a range is called on a string variable"""
+
+    with pytest.raises(Exception):
+        var = DSPVariable(dtype=str, range=(0.0, 0.1, 1.0, 2.0))

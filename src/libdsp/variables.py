@@ -128,6 +128,9 @@ class DSPVariable:
                 # apply boundaries to the candidate value
                 self._val = np.clip(self._val, self._range["minv"], self._range["maxv"])
 
+                # make sure to preserv data type (above operations switch to float64)
+                self._val = self._dtype(self._val)
+
                 return
 
             # by default, accept value
