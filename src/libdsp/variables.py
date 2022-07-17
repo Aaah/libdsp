@@ -26,6 +26,8 @@ String :
 
 """
 
+# todo : add an optional unit field
+
 
 class DSPVariableStatus(Enum):
     DSP_VAR_CONSTANT = 0  # the value cannot be changed
@@ -44,6 +46,11 @@ class DSPVariable:
         self._status = status  # can the value be edited
         self._range = None  # ranged numerical values
         self._set = None  # set of allowed values (numbers, strings)
+
+        # handle booleans as special case
+        if self._dtype == bool:
+            self._val = False
+            return
 
         # handle numerical range
         if range is not None:

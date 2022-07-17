@@ -22,6 +22,7 @@ __license__ = "Copyright 2022"
 
 - [ ] number/set: in/out of set
 
+- [ ] bool : set with range and check that it is ignored
 
 - [ ] string/format: in/out format
 - [ ] string/set: in/out set
