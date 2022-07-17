@@ -69,3 +69,16 @@ def test_parameters_number_boolean():
     assert param.val == True
 
     pass
+
+
+def test_parameters_status():
+    """lock/unlock the update of the parameter value"""
+    param = DSPModuleParameter(name="param1", var=DSPVariable(bool))
+
+    param.lock()
+    assert param.status == DSPVariableStatus.DSP_VAR_CONSTANT
+
+    param.unlock()
+    assert param.status == DSPVariableStatus.DSP_VAR_DYNAMIC
+
+    pass

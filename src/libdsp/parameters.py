@@ -84,6 +84,18 @@ class DSPModuleParameter:
         return "%s : %s" % (self._name, self._description)
 
     @property
+    def status(self):
+        return self._var.status
+
+    def lock(self):
+        self._var.status = DSPVariableStatus.DSP_VAR_CONSTANT
+        return
+
+    def unlock(self):
+        self._var.status = DSPVariableStatus.DSP_VAR_DYNAMIC
+        return
+
+    @property
     def val(self):
         return self._var.val
 
