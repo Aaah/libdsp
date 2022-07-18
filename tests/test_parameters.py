@@ -11,14 +11,20 @@ __license__ = "Copyright 2022"
 
 - [+] instance
 
-- [ ] set/get the status
-- [+] number/range : get/set the value (int, bool, float)
+- [x] set/get the status (lock/unlock)
+- [x] number/range : get/set the value (int, bool, float)
 - [ ] number/set : get/set the value (int, bool, float)
 - [ ] str/format : get/set the value
 - [ ] str/set : get/set the value
 
 - [ ] callback : check call
 - [ ] callback : only if value is different
+
+TODO FOR SIGNALS :
+- [ ] link parameters : change value
+- [ ] link parameters : lock value from direct setter
+- [ ] link parameters : check callback calls
+
 
 
 """
