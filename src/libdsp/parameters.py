@@ -121,6 +121,25 @@ class DSPModuleParameter:
                 cb()
         pass
 
+    def push_callback(self, cb):
+        """Append a new callback to the list.
+
+        Args:
+            cb (function): the callable object
+
+        Raises:
+            ValueError: Object not callable
+        """
+
+        if not callable(cb):
+            raise ValueError(
+                "DSPParameter : tried to add a callback that is not callable"
+            )
+
+        self._callbacks.append(cb)
+
+        pass
+
 
 # class DSPModuleParameterFloat(DSPModuleParameter):
 #     """

@@ -1,3 +1,4 @@
+import mock
 import pytest as pytest
 
 from libdsp.parameters import *
@@ -17,10 +18,9 @@ __license__ = "Copyright 2022"
 - [ ] str/format : get/set the value
 - [ ] str/set : get/set the value
 
-- [ ] callback : check call
-- [ ] callback : only if value is different
+- [x] callback : check call
+- [x] callback : only if value is different
 
-TODO FOR SIGNALS :
 - [ ] link parameters : change value
 - [ ] link parameters : lock value from direct setter
 - [ ] link parameters : check callback calls
@@ -88,3 +88,25 @@ def test_parameters_status():
     assert param.status == DSPVariableStatus.DSP_VAR_DYNAMIC
 
     pass
+
+
+def test_parameters_callback_1():
+    """check call"""
+
+    param = DSPModuleParameter(name="param1", var=DSPVariable(bool))
+    cb = mock.Mock()  # create mock callback
+    param.push_callback(cb)  # ... and attach it
+    assert cb.call_count == 0
+
+    # callback on value change
+    param.val = True
+    assert cb.call_count == 1
+
+    # not on identical value
+    param.val = True
+    assert cb.call_count == 1
+
+    pass
+
+
+test_parameters_callback_1()
