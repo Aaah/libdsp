@@ -34,7 +34,7 @@ class DSPModule:
 
         return
 
-    def add_parameter(self, param: DSPModuleParameter):
+    def add_parameter(self, param: DSPParameter):
 
         # check that the parameter does not exist yet
         for p in self.__params:
@@ -119,8 +119,8 @@ class DSPModule:
 #         self._description = "A simple gain plugin"
 
 #         # create parameters for the plugin
-#         self.add_parameter( DSPModuleParameterFloat(name = "gain", units = "dB", minv = 0.0, maxv = 109.0) )
-#         self.add_parameter( DSPModuleParameterFloat(name = "threshold", units = "Hz", minv = 0.0, maxv = 1000.0) )
+#         self.add_parameter( DSPParameterFloat(name = "gain", units = "dB", minv = 0.0, maxv = 109.0) )
+#         self.add_parameter( DSPParameterFloat(name = "threshold", units = "Hz", minv = 0.0, maxv = 1000.0) )
 
 #         # # create inputs and outputs
 #         # self.add_input( DSPModuleIOFloat("in") )

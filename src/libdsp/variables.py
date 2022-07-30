@@ -32,6 +32,7 @@ String :
 class DSPVariableStatus(Enum):
     DSP_VAR_CONSTANT = 0  # the value cannot be changed
     DSP_VAR_DYNAMIC = 1  # the value can be changed using the setter
+    DSP_VAR_LINKED = 2  # the value is set by another parameter
 
 
 class DSPVariable:

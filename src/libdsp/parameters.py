@@ -1,10 +1,14 @@
-import numpy as np
+from __future__ import annotations  # for nested pass of class instance
 
+from libdsp.tools import *
 from libdsp.variables import *
 
 __author__ = "Rémy VINCENT"
 __copyright__ = "Aaah"
 __license__ = "Copyright 2022"
+
+# todo : var with latest status (link fail/success/...)
+# todo : var for list of linked parameters
 
 # --- data frames transported from plugins to plugins (inputs, outputs)
 # ? can it be achieved with only outputs to avoid memory doubles?
@@ -50,18 +54,19 @@ __license__ = "Copyright 2022"
 #         return
 
 
-# --- plugin parameters
-
-
-class DSPModuleParameter:
+class DSPParameter:
     """
-    Template class for parameters used to configure DSPModules :
+    Template class for parameters.
+
+    Example of usage : to configure DSPModules
     - they should represent physical quantities as much as possible for clearer use;
     - their attributes are exhaustive enough for automated GUI generation.
+
+    Example of usage : to describe DSPSignals
     """
 
     def __init__(self, name: str, var: DSPVariable, descp: str = ""):
-        """Initialisation of a DSPModuleParameter.
+        """Initialisation of a DSPParameter.
 
         Args:
             name (str): name of the parameter.
@@ -72,11 +77,12 @@ class DSPModuleParameter:
         self._description = descp  # short description
         self._callbacks = []  # callbacks run when parameter is updated
         self._var = var  # variable instance
+        self._linked = []  # linked parameters
 
         return
 
     def __repr__(self) -> str:
-        """Detailed information about the DSPModuleParameter.
+        """Detailed information about the DSPParameter.
 
         Returns:
             str: formatted information
@@ -112,14 +118,29 @@ class DSPModuleParameter:
         # memorize the current value
         ref_v = self._var.val
 
-        # set the value
-        self._var.val = v
+        # negotiate value change with linked parameters
+        if self._negotiate_value_change(v) == True:
 
-        # callbacks on value change
-        if ref_v != self.val:
-            for cb in self._callbacks:
-                cb()
+            # set the value
+            self._var.val = v
+
+            # callbacks on value change
+            if ref_v != self.val:
+                for cb in self._callbacks:
+                    cb()
         pass
+
+    def _negotiate_value_change(self, value):
+        """Negotiate the value change in relation with other linked parameters.
+
+        Args:
+            value (_type_): the candidate value
+
+        Returns:
+            Boolean: whether the value change is possible
+        """
+
+        return False
 
     def push_callback(self, cb):
         """Append a new callback to the list.
@@ -140,8 +161,102 @@ class DSPModuleParameter:
 
         pass
 
+    def link(self, param: DSPParameter):
+        """Link 2 parameters together so their values are identical.
 
-# class DSPModuleParameterFloat(DSPModuleParameter):
+
+
+        Args:
+            param (_type_): _description_
+
+        Raises:
+            ValueError: _description_
+        """
+
+        if not isinstance(param, DSPParameter):
+            raise ValueError(
+                "DSPParameter : tried to link a something not a DSPParameter (%s)"
+                % (type(param))
+            )
+
+        # check availability and priors
+        if (
+            param not in self._linked
+        ) and param.status != DSPVariableStatus.DSP_VAR_LINKED:
+
+            # evaluate compatibility
+            if self._negotiate_capabilities(param):
+
+                # add the parameter to the list of linked parameters
+                self._linked.append(param)
+
+                # negotiate value
+                self._negotiate_value_change()
+
+            # # add it to all other linked parameters
+            # for p in self._linked:
+            #     p.link(param)
+
+        pass
+
+    def _negotiate_capabilities(self, param: DSPParameter):
+        """Compare the variables specifications (capabilities in gstreamer) to assess the possibility to link them.
+        Has to handles cases such as :
+        - datatype must be identical
+        - range vs range / range vs set / set vs set : the intersection must not be empty
+
+        Args:
+            param (DSPParameter): the parameter to assess compatibility with
+        """
+
+        # check datatype
+        # ! to test
+        if self._var._dtype != param._var._dtype:
+            print(
+                "Error at linkage, datatypes are different (%s vs %s)"
+                % (self._var._dtype, param._var._dtype)
+            )
+            return False
+
+        # check that the intersection set is not empty
+        _set = []
+        _range = []
+
+        # range vs range
+        # ! to test
+        if len(self._var._range) and len(param._var._range):
+            # todo
+            pass
+
+        # range vs set
+        # ! to test
+        if len(self._var._range) and len(param._var._set):
+            for e in param._var._set:
+                if almost_equal(e, self._var.try_value(e)):
+                    _set.append(e)
+
+        # set vs range
+        # ! to test
+        if len(self._var._set) and len(param._var._range):
+            for e in self._var._set:
+                if almost_equal(e, param._var.try_value(e)):
+                    _set.append(e)
+            pass
+
+        # set vs set
+        # ! to test
+        if len(self._var._set) and len(param._var._range):
+            for e in self._var._set:
+                for l in param._var._set:
+                    if almost_equal(e, l):
+                        _set.append(e)
+
+        # check sets size
+
+        return True
+
+
+# class DSPParameterFloat(DSPParameter):
 #     """
 #     A float parameter for DSPModule.
 #     """
@@ -174,7 +289,7 @@ class DSPModuleParameter:
 
 #         if len(set) and not all(isinstance(i, float) for i in set):
 #             raise ValueError(
-#                 "DSPModuleParameter %s : the set has values that are of improper type, expected <float>."
+#                 "DSPParameter %s : the set has values that are of improper type, expected <float>."
 #                 % (name)
 #             )
 
@@ -189,7 +304,7 @@ class DSPModuleParameter:
 #         return
 
 #     def __repr__(self) -> str:
-#         """Detailed information about the DSPModuleParameter.
+#         """Detailed information about the DSPParameter.
 
 #         Returns:
 #             str: formatted information
@@ -230,7 +345,7 @@ class DSPModuleParameter:
 
 #         if not isinstance(v, float):
 #             raise ValueError(
-#                 "DSPModuleParameter <%s> SETTER : the candidate value has improper type, expected <float>."
+#                 "DSPParameter <%s> SETTER : the candidate value has improper type, expected <float>."
 #                 % (self._name)
 #             )
 
@@ -250,7 +365,7 @@ class DSPModuleParameter:
 #         # call configure() function of plugins
 #         if reference != self.val:
 #             print(
-#                 "DSPModuleParameter <%s> : value changed from %f to %f"
+#                 "DSPParameter <%s> : value changed from %f to %f"
 #                 % (self._name, reference, self.val)
 #             )
 #             for cb in self._callbacks:
