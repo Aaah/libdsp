@@ -36,7 +36,12 @@ def almost_equal(x, y, tol=0.0000001):
 def test_variable_1():
     """datatype float"""
 
-    var = DSPVariable(dtype=float)  # correspond to np.float64
+    with pytest.raises(Exception):
+        var = DSPVariable(dtype=float)
+
+    var = DSPVariable(
+        dtype=float, range=[0.0, 0.0000000001, 1.0]
+    )  # correspond to np.float64
 
     # basic set
     rdm_float = np.random.uniform(0.0, 1.0)
@@ -53,15 +58,18 @@ def test_variable_1():
 def test_variable_2():
     """datatype int"""
 
-    var = DSPVariable(dtype=np.int16)
+    with pytest.raises(Exception):
+        var = DSPVariable(dtype=np.int16)
+
+    var = DSPVariable(dtype=int, range=[0, 1, 3458])
 
     # basic set
-    rdm_int = np.random.randint(0, 3458, dtype=np.int16)
+    rdm_int = np.random.randint(0, 3458, dtype=int)
     var.val = rdm_int
     assert var.val == rdm_int
 
     # type conflict
-    rdm_int = np.random.randint(0, 3458, dtype=np.int32)
+    rdm_int = np.random.randint(0, 3458, dtype=np.int16)
     with pytest.raises(Exception):
         var.val = rdm_int
 
@@ -71,10 +79,14 @@ def test_variable_2():
 def test_variable_3():
     """datatype boolean"""
 
-    var = DSPVariable(dtype=np.bool8)
+    var = DSPVariable(dtype=bool)
 
     # basic set
-    rdm_bool = np.random.choice([True, False])
+    rdm_bool = True
+    var.val = rdm_bool
+    assert var.val == rdm_bool
+
+    rdm_bool = False
     var.val = rdm_bool
     assert var.val == rdm_bool
 
@@ -86,29 +98,31 @@ def test_variable_3():
     pass
 
 
-def test_variable_4():
-    """datatype string"""
+# def test_variable_4():
+#     """datatype string"""
 
-    var = DSPVariable(dtype=str)
+#     var = DSPVariable(dtype=str, set=["un", "deux", "trois"])
 
-    # basic set
-    rdm_str = "this is not a random string"
-    var.val = rdm_str
-    assert var.val == rdm_str
+#     # basic set
+#     rdm_str = "this is not a random string"
+#     var.val = rdm_str
+#     assert var.val == rdm_str
 
-    # type conflict
-    rdm_int = np.random.randint(0, 3458, 1, dtype=np.int32)
-    with pytest.raises(Exception):
-        var.val = rdm_int
+#     # type conflict
+#     rdm_int = np.random.randint(0, 3458, 1, dtype=np.int32)
+#     with pytest.raises(Exception):
+#         var.val = rdm_int
 
-    pass
+#     pass
 
 
 def test_variable_5():
     """status"""
 
     # default status
-    var = DSPVariable(dtype=float, status=DSPVariableStatus.DSP_VAR_DYNAMIC)
+    var = DSPVariable(
+        dtype=float, status=DSPVariableStatus.DSP_VAR_DYNAMIC, set=[0.0, 1.0]
+    )
     assert var.status == DSPVariableStatus.DSP_VAR_DYNAMIC
 
     # change status
@@ -127,7 +141,7 @@ def test_variable_number_range_1():
     """roundings"""
 
     # create a float within a range
-    var = DSPVariable(dtype=float, range=(0.0, 0.1, 1.0, 0.0))
+    var = DSPVariable(dtype=float, range=[0.0, 0.1, 1.0, 0.0])
 
     # acceptable set
     var.val = 0.5
@@ -154,7 +168,7 @@ def test_variable_number_range_2():
     maxv = 1.0
 
     # create a float within a range
-    var = DSPVariable(dtype=float, range=(minv, stepv, maxv, 0.0))
+    var = DSPVariable(dtype=float, range=[minv, stepv, maxv, 0.0])
 
     # undershoot
     var.val = -1.0
@@ -175,7 +189,7 @@ def test_variable_number_range_3():
     maxv = 100
 
     # create a float within a range
-    var = DSPVariable(dtype=int, range=(minv, stepv, maxv, 0))
+    var = DSPVariable(dtype=int, range=[minv, stepv, maxv, 0])
 
     # undershoot
     var.val = minv - 10
@@ -197,7 +211,7 @@ def test_variable_number_range_4():
 
     # create a variable
     with pytest.raises(Exception):
-        var = DSPVariable(dtype=np.int16, range=(minv, stepv, maxv, 0))
+        var = DSPVariable(dtype=np.int16, range=[minv, stepv, maxv, 0])
 
     pass
 
@@ -206,15 +220,15 @@ def test_variable_number_range_5():
     """special cases on boundaries"""
 
     # default value is out of bounds
-    var = DSPVariable(dtype=float, range=(0.0, 0.1, 1.0, 2.0))
+    var = DSPVariable(dtype=float, range=[0.0, 0.1, 1.0, 2.0])
     assert almost_equal(var.val, 1.0)
 
     # minv > maxv
     with pytest.raises(Exception):
-        var = DSPVariable(dtype=float, range=(1.0, 0.1, 0.0))
+        var = DSPVariable(dtype=float, range=[1.0, 0.1, 0.0])
 
     # step > maxv-minv
-    var = DSPVariable(dtype=float, range=(0.0, 1.1, 1.0))
+    var = DSPVariable(dtype=float, range=[0.0, 1.1, 1.0])
     assert almost_equal(var.val, 0.0)
     var.val = 0.6
     assert almost_equal(var.val, 1.0)
@@ -226,13 +240,13 @@ def test_variable_number_range_6():
     """roundings, check preservation of datatype"""
 
     # check for floats
-    var = DSPVariable(dtype=float, range=(0.0, 0.1, 1.0, 0.0))
+    var = DSPVariable(dtype=float, range=[0.0, 0.1, 1.0, 0.0])
     var.val = 0.53
     assert almost_equal(var.val, 0.5)
     assert isinstance(var.val, float)
 
     # check for ints
-    var = DSPVariable(dtype=int, range=(0, 3, 100, 3))
+    var = DSPVariable(dtype=int, range=[0, 3, 100, 3])
     assert var.val == 3
     assert isinstance(var.val, int)
 
@@ -247,11 +261,87 @@ def test_variable_number_range_set_conflict():
     """conflict if both set and range are defined"""
 
     with pytest.raises(Exception):
-        var = DSPVariable(dtype=float, range=(0.0, 0.1, 1.0, 2.0), set=(0.0, 1.0))
+        var = DSPVariable(dtype=float, range=[0.0, 0.1, 1.0, 2.0], set=[0.0, 1.0])
+
+    pass
 
 
 def test_variable_number_range_string_conflict():
     """conflict if a range is called on a string variable"""
 
     with pytest.raises(Exception):
-        var = DSPVariable(dtype=str, range=(0.0, 0.1, 1.0, 2.0))
+        var = DSPVariable(dtype=str, range=[0.0, 0.1, 1.0, 2.0])
+
+    pass
+
+
+def test_variable_number_set_1():
+    """empty set on definition"""
+
+    with pytest.raises(Exception):
+        var = DSPVariable(dtype=int, set=[])
+
+    pass
+
+
+def test_variable_number_set_2():
+    """invalid datatype in a set definition"""
+
+    with pytest.raises(Exception):
+        var = DSPVariable(dtype=int, set=[0, 1.0, 3])
+
+    pass
+
+
+def test_variable_number_set_3():
+    """basic valid set definition"""
+
+    var = DSPVariable(dtype=int, set=[0, 1, 2, 3])
+
+    # check the resulting set
+    assert var._set == [0, 1, 2, 3]
+
+    # check the capabilities are defined
+    assert var._set_caps == var._set
+
+    pass
+
+
+def test_variable_number_set_4():
+    """set trials for ints"""
+
+    var = DSPVariable(dtype=int, set=[0, 1, 2, 3])
+
+    # valid value
+    var.val = 2
+    assert var.val == 2
+
+    # invalid value
+    var.val = -1
+    assert var.val == 2
+
+    # invalid dtype
+    with pytest.raises(Exception):
+        var.val = "not an int"
+
+    pass
+
+
+def test_variable_number_set_5():
+    """set trials for floats"""
+
+    var = DSPVariable(dtype=float, set=[0.0, 1.0, 2.0, 3.0])
+
+    # valid value
+    var.val = 2.0
+    assert var.val == 2.0
+
+    # invalid value
+    var.val = -1.0
+    assert var.val == 2.0
+
+    # invalid dtype
+    with pytest.raises(Exception):
+        var.val = "not an int"
+
+    pass

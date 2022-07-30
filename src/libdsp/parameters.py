@@ -210,7 +210,7 @@ class DSPParameter:
         """
 
         # check datatype
-        # ! to test
+        # ? to test
         if self._var._dtype != param._var._dtype:
             print(
                 "Error at linkage, datatypes are different (%s vs %s)"
@@ -244,8 +244,8 @@ class DSPParameter:
             pass
 
         # set vs set
-        # ! to test
-        if len(self._var._set) and len(param._var._range):
+        # ? to test
+        if len(self._var._set) and len(param._var._set):
             for e in self._var._set:
                 for l in param._var._set:
                     if almost_equal(e, l):

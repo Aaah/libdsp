@@ -2,6 +2,8 @@ from enum import Enum
 
 import numpy as np
 
+from libdsp.tools import *
+
 __author__ = "Rémy VINCENT"
 __copyright__ = "Aaah"
 __license__ = "Copyright 2022"
@@ -41,20 +43,24 @@ class DSPVariable:
         dtype: np.dtype,
         status: DSPVariableStatus = DSPVariableStatus.DSP_VAR_DYNAMIC,
         range: list = None,
+        set: list = None,
     ) -> None:
         self._dtype = dtype  # data type allowed, unique for each variable
         self._val = None  # the value of the variable
         self._status = status  # can the value be edited
-        self._range = None  # ranged numerical values
-        self._set = None  # set of allowed values (numbers, strings)
+
+        self._range_caps = None  # initial range (to handle negotiations)
+        self._set_caps = None  # initial set (to handle negotiations)
+        self._range = None  # active ranged numerical values
+        self._set = None  # active set of allowed values (numbers, strings)
 
         # handle booleans as special case
         if self._dtype == bool:
             self._val = False
             return
 
-        # handle numerical range
-        if range is not None:
+        # handle a range type variable
+        if isinstance(range, list):
 
             # raise error if dtype=string
             if self._dtype == str:
@@ -63,7 +69,7 @@ class DSPVariable:
                 )
 
             # raise error if set is not None
-            if self._set is not None:
+            if set is not None:
                 raise ValueError(
                     "DSPVariable RANGE : conflict with SET also defined, but cannot be used at the same time"
                 )
@@ -71,6 +77,7 @@ class DSPVariable:
             self._range = {}
 
             # check datatype in the range list
+            # ! to test
             for e in range:
                 if not isinstance(e, self._dtype):
                     raise ValueError(
@@ -79,6 +86,7 @@ class DSPVariable:
                     )
 
             # store elements
+            # ! to test
             if len(range) < 3 or len(range) > 4:
                 raise ValueError(
                     "DSPVariable RANGE : expected 3 or 4 parameters to describe the range (min, step, max, (default)) but got %d"
@@ -95,15 +103,57 @@ class DSPVariable:
                 self._range["default"] = range[3]
 
             # raise exception if minv > maxv
+            # ! to test
             if self._range["minv"] > self._range["maxv"]:
                 raise ValueError(
                     "DSPVariable RANGE : minv (%s) > maxv (%s)"
                     % (str(self._range["minv"], self._range["maxv"]))
                 )
 
+            # copy this range as the initial capabilities of the parameter
+            self._range_caps = self._range.copy()
+
             # initialise value
             self.val = self._range["default"]
 
+            return
+
+        # handle a SET type variable
+        if isinstance(set, list):
+
+            # raise error if range is not None
+            if range is not None:
+                raise ValueError(
+                    "DSPVariable SET : conflict with RANGE also defined, but cannot be used at the same time"
+                )
+
+            # raise error if the set is empty
+            if len(set) == 0:
+                raise ValueError("DSPVariable SET : set is empty")
+
+            self._set = []
+
+            # check datatype
+            for e in set:
+                if not isinstance(e, self._dtype):
+                    raise ValueError(
+                        "DSPVariable SET : mismatch of types, expected %s but got %s."
+                        % (self._dtype, type(e))
+                    )
+
+            # append values
+            for e in set:
+                self._set.append(e)
+
+            # copy this set as the initial capabilities of the parameter
+            self._set_caps = self._set.copy()
+
+            # initial value (the first one)
+            self.val = self._set[0]
+
+            return
+
+        raise ValueError("DSPVariable : no set/range defined")
         pass
 
     def __repr__(self) -> str:
@@ -127,7 +177,7 @@ class DSPVariable:
         # enable setter for dynamic variables only
         if self._status == DSPVariableStatus.DSP_VAR_DYNAMIC:
 
-            # handle numerical ranged variables
+            # handle ranged-type variables
             if self._range is not None:
 
                 # round with given accuracy
@@ -141,7 +191,26 @@ class DSPVariable:
 
                 return
 
-            # by default, accept value
+            # handle set-type variables
+            if self._set is not None:
+
+                # fork strings/numbers
+                if self._dtype == str:
+                    # ! to test
+                    if v in self._set:
+                        self._val = v
+                        return
+
+                else:
+
+                    for e in self._set:
+                        if almost_equal(e, v):
+                            self._val = e
+                            return
+
+                return
+
+            # default (booleans), accept value
             self._val = v
 
         return
