@@ -48,9 +48,6 @@ class DSPVariable:
         self._dtype = dtype  # data type allowed, unique for each variable
         self._val = None  # the value of the variable
         self._status = status  # can the value be edited
-
-        self._range_caps = None  # initial range (to handle negotiations)
-        self._set_caps = None  # initial set (to handle negotiations)
         self._range = None  # active ranged numerical values
         self._set = None  # active set of allowed values (numbers, strings)
 
@@ -110,9 +107,6 @@ class DSPVariable:
                     % (str(self._range["minv"], self._range["maxv"]))
                 )
 
-            # copy this range as the initial capabilities of the parameter
-            self._range_caps = self._range.copy()
-
             # initialise value
             self.val = self._range["default"]
 
@@ -144,9 +138,6 @@ class DSPVariable:
             # append values
             for e in set:
                 self._set.append(e)
-
-            # copy this set as the initial capabilities of the parameter
-            self._set_caps = self._set.copy()
 
             # initial value (the first one)
             self.val = self._set[0]

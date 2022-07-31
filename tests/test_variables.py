@@ -20,7 +20,7 @@ __license__ = "Copyright 2022"
 - [x] number/string: conflict if string + range
 - [x] number/range: check preservation of format after roundings (int, floats)
 
-- [ ] number/set: in/out of set
+- [x] number/set: in/out of set
 
 - [ ] bool : set with range and check that it is ignored
 
