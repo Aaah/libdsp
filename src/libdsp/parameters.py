@@ -1,5 +1,7 @@
 from __future__ import annotations  # for nested pass of class instance
 
+import copy
+
 from libdsp.tools import *
 from libdsp.variables import *
 
@@ -76,7 +78,10 @@ class DSPParameter:
         self._name = name  # name of the paramter
         self._description = descp  # short description
         self._callbacks = []  # callbacks run when parameter is updated
-        self._var = var  # variable instance
+        self._var = var  # current variable
+        self._caps = copy.deepcopy(
+            var
+        )  # default variable (defining its basic capabilities)
         self._linked = []  # linked parameters
 
         return
@@ -162,12 +167,11 @@ class DSPParameter:
         pass
 
     def link(self, param: DSPParameter):
-        """Link 2 parameters together so their values are identical.
-
-
+        """Link a parameter to self, to control its value.
+        Capabilities are negotiated to ensure valid values.
 
         Args:
-            param (_type_): _description_
+            param (DSPParameter): the parameter to link to self
 
         Raises:
             ValueError: _description_
@@ -180,18 +184,15 @@ class DSPParameter:
             )
 
         # check availability and priors
-        if (
-            param not in self._linked
-        ) and param.status != DSPVariableStatus.DSP_VAR_LINKED:
+        if (param not in self._linked) and (
+            param.status != DSPVariableStatus.DSP_VAR_LINKED
+        ):
 
             # evaluate compatibility
             if self._negotiate_capabilities(param):
 
                 # add the parameter to the list of linked parameters
                 self._linked.append(param)
-
-                # negotiate value
-                self._negotiate_value_change()
 
             # # add it to all other linked parameters
             # for p in self._linked:
@@ -204,6 +205,8 @@ class DSPParameter:
         Has to handles cases such as :
         - datatype must be identical
         - range vs range / range vs set / set vs set : the intersection must not be empty
+
+        In order to propagate constraints, the slave parameter is studied in regards with its current variable and not it caps. Indeed, this parameter may as well be master to some other parameter
 
         Args:
             param (DSPParameter): the parameter to assess compatibility with
@@ -220,24 +223,23 @@ class DSPParameter:
 
         # check that the intersection set is not empty
         _set = []
-        _range = []
 
         # range vs range
         # ! to test
-        if len(self._var._range) and len(param._var._range):
+        if (self._var._range is not None) and (param._var._range is not None):
             # todo
             pass
 
         # range vs set
         # ! to test
-        if len(self._var._range) and len(param._var._set):
+        if (self._var._range is not None) and (param._var._set is not None):
             for e in param._var._set:
                 if almost_equal(e, self._var.try_value(e)):
                     _set.append(e)
 
         # set vs range
         # ! to test
-        if len(self._var._set) and len(param._var._range):
+        if (self._var._set is not None) and (param._var._range is not None):
             for e in self._var._set:
                 if almost_equal(e, param._var.try_value(e)):
                     _set.append(e)
@@ -245,7 +247,7 @@ class DSPParameter:
 
         # set vs set
         # ? to test
-        if len(self._var._set) and len(param._var._set):
+        if (self._var._set is not None) and (param._var._set is not None):
             for e in self._var._set:
                 for l in param._var._set:
                     if almost_equal(e, l):
